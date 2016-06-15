@@ -35,22 +35,52 @@
  */
 
 extern "C" {
+//#include "cpu.h"
+#include "qemu/osdep.h"
+#include "config-target.h"
+#include "qemu-common.h"
 #include "tcg.h"
-}
+};
 
 #include "tcg-llvm.h"
-#include "panda_memlog.h"
+
+// XXX still need this?
+//#include "panda_memlog.h"
 
 extern "C" {
-#include "config.h"
-#include "qemu-common.h"
-#include "disas.h"
+#include "disas/disas.h"
 
-#include "panda_plugin.h"
+// XXX do this later
+//#include "panda_plugin.h"
 
 #if defined(CONFIG_SOFTMMU)
 
-#include "../../softmmu_defs.h"
+//#include "../../softmmu_defs.h"
+//#include "softmmu_template.h"
+//#include "exec/cpu_ldst.h"
+//#include "exec/cpu_ldst_template.h"
+
+// XXX RJW maybe this will work for the softmmu helper stuff below? stolen from
+// target-i386/seg_helper.c.  Or maybe we don't need to include this stuff at
+// all here?
+
+/*
+//#define CPU_MMU_INDEX (cpu_mmu_index_kernel(env))
+//#define MEMSUFFIX _kernel
+#define DATA_SIZE 1
+#include "exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 2
+#include "exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 4
+#include "exec/cpu_ldst_template.h"
+
+#define DATA_SIZE 8
+#include "exec/cpu_ldst_template.h"
+//#undef CPU_MMU_INDEX
+//#undef MEMSUFFIX
+*/
 
 // To support other architectures, make similar minor changes to op_helper.c
 // These functions perform logging of dynamic values
@@ -122,19 +152,21 @@ static char *qemu_st_helper_names[5] = {
 
 #endif // CONFIG_SOFTMMU
 
-}
+} // extern "C"
 
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
-#include <llvm/ExecutionEngine/JIT.h>
+//#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/ExecutionEngine/OrcMCJITReplacement.h>
 
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
-#include <llvm/PassManager.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/IR/Intrinsics.h>
-#include <llvm/Analysis/Verifier.h>
+//#include <llvm/Analysis/Verifier.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>

@@ -258,8 +258,12 @@ $(RR_PRINT_PROG): rr_print.o
 
 
 
-plugin-%: 
-	$(call quiet-command,$(MAKE) $(PLUGIN_SUBDIR_MAKEFLAGS) -C $(SRC_PATH)/panda/plugins/$* V="$(V)" TARGET_DIR="$(SRC_DIR)/$(TARGET_DIR)" all,)
+panda/plugins/%/Makefile: $(SRC_PATH)/panda/plugins/%/Makefile
+	mkdir -p $(dirname $@)
+	cp $^ $@
+
+plugin-%: panda/plugins/%/Makefile
+	$(call quiet-command,$(MAKE) $(PLUGIN_SUBDIR_MAKEFLAGS) -C panda/plugins/$* V="$(V)" TARGET_DIR="$(SRC_DIR)$(TARGET_DIR)" all,)
 
 extra-plugin-%: $(obj-y)
 	$(call quiet-command,$(MAKE) $(EXTRA_PLUGIN_SUBDIR_MAKEFLAGS) -C $(EXTRA_PLUGINS_PATH)/panda/plugins/$* V="$(V)" TARGET_DIR="$(SRC_DIR)/$(TARGET_DIR)" all,)  

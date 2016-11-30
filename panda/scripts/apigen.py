@@ -3,7 +3,6 @@
 import os
 import sys
 import re
-import pdb
 import pycparser
 import subprocess
 
@@ -29,6 +28,7 @@ def get_arglists(pf):
             function_name = d.name
             #print "function name = [%s]" % function_name
             fundec = d.children()[0][1]
+            if type(fundec) != pycparser.c_ast.FuncDecl: continue
             args[function_name] = []
             for arg in fundec.args.params:
                 if not (arg.name is None):
@@ -150,7 +150,7 @@ def generate_api(interface_file, ext_file, extra_gcc_args):
     includes = []
 
     # use preprocessor
-    pf = subprocess.check_output(['gcc', '-E', interface_file] + extra_gcc_args)
+    pf = subprocess.check_output(['gcc', '-D__signed=', '-D__builtin_va_list=void*', '-E', interface_file] + extra_gcc_args)
 
     # use pycparser to get arglists
     arglist = get_arglists(pf)
@@ -162,11 +162,12 @@ def generate_api(interface_file, ext_file, extra_gcc_args):
             # could be a fn prototype
             #print line
             foo = split_fun_prototype(line)
-            if not (foo is None):
+            if foo is not None:
                 # it is a fn prototype -- pull out return type, name, and arglist with types
                 (fn_rtype, fn_name, args_with_types) = foo
-                tup = (fn_rtype, fn_name, args_with_types, arglist[fn_name])
-                functions.append(tup)
+                if fn_name != 'void': # function ptr return
+                    tup = (fn_rtype, fn_name, args_with_types, arglist[fn_name])
+                    functions.append(tup)
     # Plugin interface file will look like [...]/plugins/<name>/<name>_int.h
     plugin_name = os.path.basename(os.path.dirname(interface_file))
     code = generate_code(functions, plugin_name, includes)
